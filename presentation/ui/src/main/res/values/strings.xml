@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search">Search</string>
+    <string name="loading">Loading</string>
+    <string name="re_try">Re-Try</string>
+    <string name="delete">Delete</string>
+    <string name="weather_now">Weather Now</string>
+    <string name="forecast">Forecast</string>
+    <string name="general_error_message">Something went wring! Pleas try again</string>
+</resources>
