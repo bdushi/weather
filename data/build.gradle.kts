@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.library)
+    alias(libs.plugins.com.google.gms.google.services)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.com.google.devtools.ksp)
@@ -61,6 +62,8 @@ dependencies {
     implementation(libs.ktor.client.serialization)
 
     implementation(libs.kotlinx.serialization.json)
+
+    implementation(libs.com.google.play.services.location)
 
     implementation(project(":domain"))
 

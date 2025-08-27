@@ -9,6 +9,6 @@ data class ForecastWeather(
     val clouds: Clouds,
     val wind: Wind,
     val visibility: Int,
-    val pop: Int,
+    val pop: Double,
     val dtTxt: String
 )

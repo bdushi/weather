@@ -4,6 +4,7 @@ import al.bruno.domain.weather.model.CacheSearch
 import al.bruno.domain.weather.model.Forecast
 import al.bruno.domain.weather.model.Result
 import al.bruno.domain.weather.model.Weather
+import al.bruno.domain.weather.repository.LocationRepository
 import al.bruno.domain.weather.usecase.DeleteCacheSearchUseCase
 import al.bruno.domain.weather.usecase.GetCacheSearchUseCase
 import al.bruno.domain.weather.usecase.GetForecastUseCase
@@ -38,6 +39,7 @@ class WeatherViewModel @Inject constructor(
     private val getCacheSearchUseCase: GetCacheSearchUseCase,
     private val insertCacheSearchUseCase: InsertCacheSearchUseCase,
     private val deleteCacheSearchUseCase: DeleteCacheSearchUseCase,
+    private val locationRepository: LocationRepository,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val _weatherUIState: MutableStateFlow<WeatherUIState> =
@@ -45,8 +47,15 @@ class WeatherViewModel @Inject constructor(
     val weatherUIState: StateFlow<WeatherUIState> get() = _weatherUIState.asStateFlow()
 
     init {
-        getWeather(DEFAULT_QUERY)
+
+//        getWeather(mapOf("q" to DEFAULT_QUERY))
         getCacheSearch()
+    }
+
+    fun getWeatherData() {
+        locationRepository.fetchLocation {
+            getWeather(mapOf("lat" to it.lat.toString(), "lon" to it.lon.toString()))
+        }
     }
 
     fun getCacheSearch() {
@@ -62,7 +71,7 @@ class WeatherViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    fun getWeather(query: String) {
+    fun getWeather(query: Map<String, String>) {
         viewModelScope.launch(Dispatchers.IO + CoroutineExceptionHandler { _, exception ->
             _weatherUIState.update {
                 it.copy(
@@ -108,6 +117,7 @@ class WeatherViewModel @Inject constructor(
             }
             _weatherUIState.update {
                 it.copy(
+                    query = weatherResponse.data.name,
                     uIState = UIState.Success,
                     weatherUiModel = weatherResponse.data.toWeatherUiModel(),
                     forecastUiModel = forecastResponse.data.toForecastUiModel()
@@ -122,7 +132,7 @@ class WeatherViewModel @Inject constructor(
 
     private fun WeatherViewModel.executeWeatherSearch(query: String, shouldSave: Boolean = false) {
         _weatherUIState.updateQuery(query)
-        getWeather(query)
+        getWeather(mapOf("q" to query))
         if (shouldSave) saveSearchQuery(query)
     }
 
@@ -135,7 +145,10 @@ class WeatherViewModel @Inject constructor(
                 executeWeatherSearch(event.query, shouldSave = true)
 
             is WeatherUIEvent.Search -> {
-                executeWeatherSearch(event.query.ifEmpty { DEFAULT_QUERY }, shouldSave = true)
+                if (event.query.isNotEmpty())
+                    executeWeatherSearch(event.query, shouldSave = true)
+                else
+                    executeWeatherSearch(DEFAULT_QUERY, shouldSave = true)
             }
 
             is WeatherUIEvent.OnQueryChange -> {
@@ -148,7 +161,7 @@ class WeatherViewModel @Inject constructor(
 
             WeatherUIEvent.OnRetry -> {
                 _weatherUIState.updateQuery(DEFAULT_QUERY)
-                getWeather(DEFAULT_QUERY)
+                getWeather(mapOf("q" to DEFAULT_QUERY))
             }
         }
     }

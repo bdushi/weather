@@ -7,4 +7,12 @@
     <string name="weather_now">Weather Now</string>
     <string name="forecast">Forecast</string>
     <string name="general_error_message">Something went wring! Pleas try again</string>
+    <string name="permission_denied">Permission Denied</string>
+    <string name="settings">Settings</string>
+    <string name="allow_access">Allow access</string>
+    <string name="allow_access_detail_location">Allow Royal Walk to access your Location</string>
+    <string name="ok_title">OK</string>
+    <string name="cancel_title">Cancel</string>
+    <string name="allow_access_detail_location_and_notifications">Allow access detail location and notifications</string>
+    <string name="allow_access_detail_notifications">Allow access detail notifications</string>
 </resources>

@@ -9,6 +9,6 @@ data class ForecastWeatherUiModel(
     val clouds: CloudsUiModel,
     val wind: WindUiModel,
     val visibility: Int,
-    val pop: Int,
+    val pop: Double,
     val dtTxt: String
 )

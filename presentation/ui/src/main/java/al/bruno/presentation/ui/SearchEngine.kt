@@ -69,7 +69,7 @@ fun SearchEngine(
         trailingIcon = {
             if (isSearching) {
                 IconButton(onClick = {
-                    onSearch("")
+                    onToggleSearch()
                 }) {
                     Icon(
                         imageVector = Icons.Outlined.Clear,

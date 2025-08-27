@@ -12,24 +12,24 @@ import io.ktor.http.contentType
 import javax.inject.Inject
 
 class WeatherDataSource @Inject constructor(private val httpClient: HttpClient) : WeatherNetworkDataSource {
-    override suspend fun weather(query: String): WeatherResponse {
+    override suspend fun weather(query: Map<String, String>): WeatherResponse {
         return httpClient.get("/data/2.5/weather") {
-            url {
-                parameter("q", query)
-                parameter("appid", BuildConfig.API_KEY)
-                parameter("units", "metric")
+            query.forEach { (key, value) ->
+                parameter(key, value)
             }
+            parameter("appid", BuildConfig.API_KEY)
+            parameter("units", "metric")
             contentType(ContentType.Application.Json)
         }.body()
     }
 
-    override suspend fun forecast(query: String): ForecastResponse {
+    override suspend fun forecast(query: Map<String, String>): ForecastResponse {
         return httpClient.get("/data/2.5/forecast") {
-            url {
-                parameter("q", query)
-                parameter("appid", BuildConfig.API_KEY)
-                parameter("units", "metric")
+            query.forEach { (key, value) ->
+                parameter(key, value)
             }
+            parameter("appid", BuildConfig.API_KEY)
+            parameter("units", "metric")
             contentType(ContentType.Application.Json)
         }.body()
     }

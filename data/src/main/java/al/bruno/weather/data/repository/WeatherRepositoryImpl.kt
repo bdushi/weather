@@ -12,7 +12,7 @@ import javax.inject.Inject
 
 class WeatherRepositoryImpl @Inject constructor(private val weatherNetworkDataSource: WeatherNetworkDataSource) :
     WeatherRepository {
-    override suspend fun weather(query: String): Result<Weather> {
+    override suspend fun weather(query: Map<String, String>): Result<Weather> {
         return try {
             Result.Success(
                 weatherNetworkDataSource
@@ -24,7 +24,7 @@ class WeatherRepositoryImpl @Inject constructor(private val weatherNetworkDataSo
         }
     }
 
-    override suspend fun forecast(query: String): Result<Forecast> {
+    override suspend fun forecast(query: Map<String, String>): Result<Forecast> {
         return try {
             Result.Success(
                 weatherNetworkDataSource

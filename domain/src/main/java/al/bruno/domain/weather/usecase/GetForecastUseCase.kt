@@ -5,6 +5,6 @@ import al.bruno.domain.weather.model.Result
 import al.bruno.domain.weather.repository.WeatherRepository
 
 class GetForecastUseCase(private val weatherRepository: WeatherRepository) {
-    suspend operator fun invoke(query: String): Result<Forecast> =
+    suspend operator fun invoke(query: Map<String, String>): Result<Forecast> =
         weatherRepository.forecast(query)
 }
