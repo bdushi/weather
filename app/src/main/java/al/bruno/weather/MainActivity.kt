@@ -1,5 +1,6 @@
 package al.bruno.weather
 
+import al.bruno.presentation.ui.R
 import al.bruno.presentation.ui.theme.WeatherTheme
 import al.bruno.presentation.weather.WeatherScreen
 import al.bruno.presentation.weather.WeatherViewModel
@@ -22,10 +23,9 @@ import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import al.bruno.presentation.ui.R
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -129,22 +129,15 @@ class MainActivity : ComponentActivity() {
 
     private fun getPermissionsToRequest(): List<String> {
         val permissions = mutableListOf<String>()
-
-        // Location permissions
         if (!hasLocationPermission()) {
             permissions.addAll(
                 listOf(
+                    Manifest.permission.POST_NOTIFICATIONS,
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION
                 )
             )
         }
-
-        // Notification permission (API 33+)
-        if (!hasNotificationPermission() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
-        }
-
         return permissions
     }
 
@@ -188,11 +181,11 @@ class MainActivity : ComponentActivity() {
         checkAllPermissions()
         setContent {
             WeatherTheme {
-                val weatherUIState by weatherViewModel.weatherUIState.collectAsStateWithLifecycle()
+                val weatherUIState by weatherViewModel.state.collectAsStateWithLifecycle()
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     WeatherScreen(
                         weatherUIState = weatherUIState,
-                        processWeatherUIEvent = weatherViewModel.processExploreUIEvent,
+                        processWeatherUIEvent = weatherViewModel::sendEvent,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }

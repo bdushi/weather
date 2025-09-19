@@ -10,25 +10,20 @@ import al.bruno.domain.weather.usecase.GetCacheSearchUseCase
 import al.bruno.domain.weather.usecase.GetForecastUseCase
 import al.bruno.domain.weather.usecase.GetWeatherUseCase
 import al.bruno.domain.weather.usecase.InsertCacheSearchUseCase
+import al.bruno.presentation.ui.base.BaseViewModel
 import al.bruno.weather.presentation.model.CacheSearchUiModel
 import al.bruno.weather.presentation.model.UIState
 import al.bruno.weather.presentation.model.mapper.toCacheSearchUiModelList
 import al.bruno.weather.presentation.model.mapper.toForecastUiModel
 import al.bruno.weather.presentation.model.mapper.toWeatherUiModel
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -41,16 +36,7 @@ class WeatherViewModel @Inject constructor(
     private val deleteCacheSearchUseCase: DeleteCacheSearchUseCase,
     private val locationRepository: LocationRepository,
     private val savedStateHandle: SavedStateHandle,
-) : ViewModel() {
-    private val _weatherUIState: MutableStateFlow<WeatherUIState> =
-        MutableStateFlow(WeatherUIState())
-    val weatherUIState: StateFlow<WeatherUIState> get() = _weatherUIState.asStateFlow()
-
-    init {
-
-//        getWeather(mapOf("q" to DEFAULT_QUERY))
-        getCacheSearch()
-    }
+) : BaseViewModel<WeatherUIEvent, WeatherUIState, WeatherUIEffect>(initialState = WeatherUIState()) {
 
     fun getWeatherData() {
         locationRepository.fetchLocation {
@@ -61,20 +47,19 @@ class WeatherViewModel @Inject constructor(
     fun getCacheSearch() {
         getCacheSearchUseCase()
             .map { cacheSearches ->
-                _weatherUIState.update {
-                    it.copy(
+                setState {
+                    copy(
                         cacheSearch = cacheSearches.toCacheSearchUiModelList()
                     )
                 }
             }
-            .flowOn(Dispatchers.IO)
             .launchIn(viewModelScope)
     }
 
     fun getWeather(query: Map<String, String>) {
         viewModelScope.launch(Dispatchers.IO + CoroutineExceptionHandler { _, exception ->
-            _weatherUIState.update {
-                it.copy(
+            setState {
+                copy(
                     uIState = UIState.Error(exception.message)
                 )
             }
@@ -90,8 +75,8 @@ class WeatherViewModel @Inject constructor(
             // Handle weather response
             when (weatherResponse) {
                 is Result.Error -> {
-                    _weatherUIState.update {
-                        it.copy(
+                    setState {
+                        copy(
                             uIState = UIState.Error(weatherResponse.error)
                         )
                     }
@@ -104,8 +89,8 @@ class WeatherViewModel @Inject constructor(
 
             when (forecastResponse) {
                 is Result.Error -> {
-                    _weatherUIState.update {
-                        it.copy(
+                    setState {
+                        copy(
                             uIState = UIState.Error(forecastResponse.error)
                         )
                     }
@@ -115,8 +100,8 @@ class WeatherViewModel @Inject constructor(
                     // Forecast successful, continue
                 }
             }
-            _weatherUIState.update {
-                it.copy(
+            setState {
+                copy(
                     query = weatherResponse.data.name,
                     uIState = UIState.Success,
                     weatherUiModel = weatherResponse.data.toWeatherUiModel(),
@@ -126,17 +111,21 @@ class WeatherViewModel @Inject constructor(
         }
     }
 
-    private fun MutableStateFlow<WeatherUIState>.updateQuery(query: String) {
-        update { it.copy(query = query) }
-    }
-
-    private fun WeatherViewModel.executeWeatherSearch(query: String, shouldSave: Boolean = false) {
-        _weatherUIState.updateQuery(query)
+    private suspend fun executeWeatherSearch(query: String, shouldSave: Boolean = false) {
+        setState {
+            copy(
+                query = query
+            )
+        }
         getWeather(mapOf("q" to query))
         if (shouldSave) saveSearchQuery(query)
     }
 
-    val processExploreUIEvent: (WeatherUIEvent) -> Unit = { event ->
+    override suspend fun onStart() {
+        getCacheSearch()
+    }
+
+    override suspend fun handleEvent (event: WeatherUIEvent) {
         when (event) {
             WeatherUIEvent.OnClear ->
                 executeWeatherSearch(DEFAULT_QUERY)
@@ -152,7 +141,11 @@ class WeatherViewModel @Inject constructor(
             }
 
             is WeatherUIEvent.OnQueryChange -> {
-                _weatherUIState.updateQuery(event.query)
+                setState {
+                    copy(
+                        query = event.query
+                    )
+                }
             }
 
             is WeatherUIEvent.OnDeleteCacheSearch -> {
@@ -160,31 +153,32 @@ class WeatherViewModel @Inject constructor(
             }
 
             WeatherUIEvent.OnRetry -> {
-                _weatherUIState.updateQuery(DEFAULT_QUERY)
+                setState {
+                    copy(
+                        query = DEFAULT_QUERY
+                    )
+                }
                 getWeather(mapOf("q" to DEFAULT_QUERY))
             }
         }
     }
 
-    fun deleteCacheSearchQuery(cacheSearchUiModel: CacheSearchUiModel) {
-        viewModelScope.launch(Dispatchers.IO) {
-            deleteCacheSearchUseCase(
-                CacheSearch(
-                    id = cacheSearchUiModel.id,
-                    query = cacheSearchUiModel.query
-                )
+    suspend fun deleteCacheSearchQuery(cacheSearchUiModel: CacheSearchUiModel) {
+        deleteCacheSearchUseCase(
+            CacheSearch(
+                id = cacheSearchUiModel.id,
+                query = cacheSearchUiModel.query
             )
-        }
+        )
     }
 
-    fun saveSearchQuery(query: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            insertCacheSearchUseCase(
-                CacheSearch(
-                    id = 0,
-                    query = query
-                )
+    suspend fun saveSearchQuery(query: String) {
+        insertCacheSearchUseCase(
+            CacheSearch(
+                id = 0,
+                query = query
             )
-        }
+        )
     }
+
 }

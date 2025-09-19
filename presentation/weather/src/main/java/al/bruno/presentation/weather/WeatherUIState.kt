@@ -1,5 +1,6 @@
 package al.bruno.presentation.weather
 
+import al.bruno.presentation.ui.base.UiState
 import al.bruno.weather.presentation.model.CacheSearchUiModel
 import al.bruno.weather.presentation.model.ForecastUiModel
 import al.bruno.weather.presentation.model.UIState
@@ -14,5 +15,5 @@ data class WeatherUIState(
     val input: List<String> = emptyList(),
     val cacheSearch: List<CacheSearchUiModel> = emptyList(),
     val searchItem: List<String> = emptyList()
-)
+) : UiState
 const val DEFAULT_QUERY = "London"

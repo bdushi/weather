@@ -1,8 +1,9 @@
 package al.bruno.presentation.weather
 
+import al.bruno.presentation.ui.base.UiEvent
 import al.bruno.weather.presentation.model.CacheSearchUiModel
 
-sealed class WeatherUIEvent {
+sealed class WeatherUIEvent : UiEvent {
     data class Search(val query: String) : WeatherUIEvent()
     data class OnQueryChange(val query: String) : WeatherUIEvent()
     data class OnSelectedItems(val query: String) : WeatherUIEvent()
