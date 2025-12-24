@@ -4,21 +4,15 @@ import al.bruno.weather.data.local.AppDatabase
 import al.bruno.weather.data.local.dao.SearchDao
 import android.content.Context
 import androidx.room.Room
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
-
+import org.koin.core.annotation.ComponentScan
+import org.koin.core.annotation.Module
+import org.koin.core.annotation.Single
 
 @Module
-@InstallIn(SingletonComponent::class)
+@ComponentScan
 class LocalDataSourceModule {
-
-    @Singleton
-    @Provides
-    fun appDatabase(@ApplicationContext context: Context): AppDatabase {
+    @Single(createdAtStart = false)
+    fun appDatabase(context: Context): AppDatabase {
         return Room.databaseBuilder(
             context,
             AppDatabase::class.java,
@@ -26,8 +20,7 @@ class LocalDataSourceModule {
         ).build()
     }
 
-    @Singleton
-    @Provides
+    @Single(createdAtStart = false)
     fun engagementDao(database: AppDatabase): SearchDao {
         return database.searchDao()
     }

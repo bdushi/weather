@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.android.hilt)
+    alias(libs.plugins.io.kotzilla)
     alias(libs.plugins.com.google.devtools.ksp)
 }
 
@@ -58,10 +58,14 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
-    implementation(libs.coil.compose)
+    implementation(libs.io.coil.compose)
 
-    implementation(libs.dagger.hilt.android)
-    ksp(libs.dagger.hilt.android.compiler)
+    // Koin
+    implementation(platform(libs.io.koin.bom))
+    implementation(libs.io.koin.compose)
+    // Koin annotations
+    implementation(libs.io.koin.annotations)
+    ksp(libs.io.koin.ksp.compiler)
 
     implementation(project(":data"))
     implementation(project(":domain"))

@@ -3,7 +3,7 @@ package al.bruno.weather
 import al.bruno.presentation.ui.R
 import al.bruno.presentation.ui.theme.WeatherTheme
 import al.bruno.presentation.weather.WeatherScreen
-import al.bruno.presentation.weather.WeatherViewModel
+import al.bruno.presentation.weather.WeatherUIEffect
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -14,22 +14,17 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import androidx.core.net.toUri
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
-import dagger.hilt.android.AndroidEntryPoint
 
-@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private val weatherViewModel: WeatherViewModel by viewModels()
     // Consolidated permission launcher that handles both location and notification permissions
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -39,11 +34,11 @@ class MainActivity : ComponentActivity() {
     private fun handlePermissionResults(permissions: Map<String, Boolean>) {
         val hasLocationPermission = hasLocationPermission()
         val hasNotificationPermission = hasNotificationPermission()
-        if (hasLocationPermission) {
-            weatherViewModel.getWeatherData()
-        } else {
-            showPermissionDeniedMessage()
-        }
+//        if (hasLocationPermission) {
+//            weatherViewModel.fetchWeatherData()
+//        } else {
+//            showPermissionDeniedMessage()
+//        }
     }
 
     private fun hasLocationPermission(): Boolean {
@@ -90,7 +85,7 @@ class MainActivity : ComponentActivity() {
 
         if (permissionsToRequest.isEmpty()) {
             // All permissions granted
-            weatherViewModel.getWeatherData()
+//            weatherViewModel.fetchWeatherData()
             return
         }
 
@@ -107,7 +102,7 @@ class MainActivity : ComponentActivity() {
     // Location-only permission check (for your onLocationClick)
     fun checkLocationPermission() {
         if (hasLocationPermission()) {
-            weatherViewModel.getWeatherData()
+//            weatherViewModel.fetchWeatherData()
             return
         }
 
@@ -181,11 +176,8 @@ class MainActivity : ComponentActivity() {
         checkAllPermissions()
         setContent {
             WeatherTheme {
-                val weatherUIState by weatherViewModel.state.collectAsStateWithLifecycle()
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     WeatherScreen(
-                        weatherUIState = weatherUIState,
-                        processWeatherUIEvent = weatherViewModel::sendEvent,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }

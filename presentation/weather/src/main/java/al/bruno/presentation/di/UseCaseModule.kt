@@ -7,40 +7,34 @@ import al.bruno.domain.weather.usecase.GetCacheSearchUseCase
 import al.bruno.domain.weather.usecase.GetForecastUseCase
 import al.bruno.domain.weather.usecase.GetWeatherUseCase
 import al.bruno.domain.weather.usecase.InsertCacheSearchUseCase
-import dagger.Module
-import dagger.Provides
-import dagger.Reusable
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
+import org.koin.core.annotation.ComponentScan
+import org.koin.core.annotation.Module
+import org.koin.core.annotation.Single
 
-@InstallIn(SingletonComponent::class)
+
 @Module
+@ComponentScan
 class UseCaseModule {
-    @Reusable
-    @Provides
+    @Single(createdAtStart = false)
     fun getWeatherUseCaseModule(weatherRepository: WeatherRepository) =
         GetWeatherUseCase(weatherRepository)
 
-    @Reusable
-    @Provides
+    @Single(createdAtStart = false)
     fun getGetForecastUseCase(weatherRepository: WeatherRepository) =
         GetForecastUseCase(weatherRepository)
 
 
-    @Reusable
-    @Provides
+    @Single(createdAtStart = false)
     fun deleteCacheSearchUseCaseModule(cacheSearchRepository: CacheSearchRepository) =
         DeleteCacheSearchUseCase(cacheSearchRepository)
 
 
-    @Reusable
-    @Provides
+    @Single(createdAtStart = false)
     fun getCacheSearchUseCaseModule(cacheSearchRepository: CacheSearchRepository) =
         GetCacheSearchUseCase(cacheSearchRepository)
 
 
-    @Reusable
-    @Provides
+    @Single(createdAtStart = false)
     fun insertCacheSearchUseCaseModule(cacheSearchRepository: CacheSearchRepository) =
         InsertCacheSearchUseCase(cacheSearchRepository)
 }

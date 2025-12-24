@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.android.hilt)
     alias(libs.plugins.com.google.devtools.ksp)
 }
 
@@ -47,12 +46,15 @@ android {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime)
+    // Koin
+    implementation(platform(libs.io.koin.bom))
+    implementation(libs.io.koin.compose)
+    // Koin annotations
+    implementation(libs.io.koin.annotations)
+    ksp(libs.io.koin.ksp.compiler)
 
-    implementation(libs.dagger.hilt.android)
-    ksp(libs.dagger.hilt.android.compiler)
-
-    implementation(libs.coil.compose)
-    implementation(libs.coil.network)
+    implementation(libs.io.coil.compose)
+    implementation(libs.io.coil.network)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
@@ -62,7 +64,7 @@ dependencies {
 
     implementation(project(":domain"))
     implementation(project(":presentation:ui"))
-    implementation(project(":presentation:ui-model"))
+    implementation(project(":presentation:model"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

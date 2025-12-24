@@ -4,9 +4,8 @@ import al.bruno.weather.data.local.AppDatabase
 import al.bruno.weather.data.local.CacheSearchLocalDataSource
 import al.bruno.weather.data.local.model.CacheSearchEntity
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
 
-class CacheSearchDataSource @Inject constructor(private val appDatabase: AppDatabase) :
+class CacheSearchDataSource(private val appDatabase: AppDatabase) :
     CacheSearchLocalDataSource {
     override suspend fun insertCacheSearch(cacheSearchEntity: CacheSearchEntity): Long {
         return appDatabase

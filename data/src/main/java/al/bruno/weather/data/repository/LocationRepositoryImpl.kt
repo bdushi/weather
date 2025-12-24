@@ -6,9 +6,10 @@ import android.Manifest
 import android.location.Location
 import androidx.annotation.RequiresPermission
 import com.google.android.gms.location.FusedLocationProviderClient
-import javax.inject.Inject
+import org.koin.core.annotation.Single
 
-class LocationRepositoryImpl @Inject constructor(private val locationProvider: FusedLocationProviderClient) :
+@Single
+class LocationRepositoryImpl(private val locationProvider: FusedLocationProviderClient) :
     LocationRepository {
     override var isMyLocationEnabled: Boolean = false
 

@@ -10,175 +10,339 @@ import al.bruno.domain.weather.usecase.GetCacheSearchUseCase
 import al.bruno.domain.weather.usecase.GetForecastUseCase
 import al.bruno.domain.weather.usecase.GetWeatherUseCase
 import al.bruno.domain.weather.usecase.InsertCacheSearchUseCase
-import al.bruno.presentation.ui.base.BaseViewModel
+import al.bruno.presentation.ui.base.BaseReducerViewModel
+import al.bruno.presentation.ui.base.Reducer
 import al.bruno.weather.presentation.model.CacheSearchUiModel
 import al.bruno.weather.presentation.model.UIState
 import al.bruno.weather.presentation.model.mapper.toCacheSearchUiModelList
 import al.bruno.weather.presentation.model.mapper.toForecastUiModel
 import al.bruno.weather.presentation.model.mapper.toWeatherUiModel
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.android.annotation.KoinViewModel
 
-@HiltViewModel
-class WeatherViewModel @Inject constructor(
+@KoinViewModel
+class WeatherViewModel(
     private val getWeatherUseCase: GetWeatherUseCase,
     private val getForecastUseCase: GetForecastUseCase,
     private val getCacheSearchUseCase: GetCacheSearchUseCase,
     private val insertCacheSearchUseCase: InsertCacheSearchUseCase,
     private val deleteCacheSearchUseCase: DeleteCacheSearchUseCase,
-    private val locationRepository: LocationRepository,
-    private val savedStateHandle: SavedStateHandle,
-) : BaseViewModel<WeatherUIEvent, WeatherUIState, WeatherUIEffect>(initialState = WeatherUIState()) {
+    private val locationRepository: LocationRepository
+) : BaseReducerViewModel<WeatherUIState, WeatherUIEvent, WeatherUIEffect>(
+    initialState = WeatherUIState()
+) {
 
-    fun getWeatherData() {
-        locationRepository.fetchLocation {
-            getWeather(mapOf("lat" to it.lat.toString(), "lon" to it.lon.toString()))
+    /**
+     * REDUCER: Pure state transformations + declarative UI effects
+     */
+    override val reducer = object : Reducer<WeatherUIState, WeatherUIEvent, WeatherUIEffect> {
+        override fun reduce(
+            state: WeatherUIState,
+            event: WeatherUIEvent
+        ): Pair<WeatherUIState, WeatherUIEffect?> = when (event) {
+
+            is WeatherUIEvent.Search -> {
+                when {
+                    event.query.isBlank() -> {
+                        // Show validation error
+                        state to WeatherUIEffect.ShowError("Search query cannot be empty")
+                    }
+
+                    event.query.length < 2 -> {
+                        // Show validation error
+                        state to WeatherUIEffect.ShowError("Search query must be at least 2 characters")
+                    }
+
+                    else -> {
+                        // Valid search - set loading state
+                        state.copy(
+                            query = event.query,
+                            isSearching = true,
+                            uIState = UIState.Loading
+                        ) to null
+                    }
+                }
+            }
+
+            is WeatherUIEvent.OnQueryChange -> {
+                // Just update query, no side effect
+                state.copy(query = event.query) to null
+            }
+
+            is WeatherUIEvent.OnSelectedItems -> {
+                // User selected from cache - start search
+                state.copy(
+                    query = event.query,
+                    isSearching = true,
+                    uIState = UIState.Loading
+                ) to null
+            }
+
+            WeatherUIEvent.OnClear -> {
+                // Clear search and reset to default
+                state.copy(
+                    query = DEFAULT_QUERY,
+                    isSearching = true,
+                    uIState = UIState.Loading
+                ) to null
+            }
+
+            is WeatherUIEvent.OnDeleteCacheSearch -> {
+                // Optimistic update - remove from list
+                val newList = state.cacheSearch.filter {
+                    it.id != event.cacheSearchUiModel.id
+                }
+
+                // Show toast if last item was deleted
+                val effect = if (newList.isEmpty()) {
+                    WeatherUIEffect.ShowToast("All search history cleared")
+                } else {
+                    null
+                }
+
+                state.copy(cacheSearch = newList) to effect
+            }
+
+            WeatherUIEvent.OnRetry -> {
+                // Retry with current query
+                state.copy(
+                    isSearching = true,
+                    uIState = UIState.Loading
+                ) to null
+            }
         }
     }
 
-    fun getCacheSearch() {
-        getCacheSearchUseCase()
-            .map { cacheSearches ->
-                setState {
-                    copy(
-                        cacheSearch = cacheSearches.toCacheSearchUiModelList()
-                    )
+    override suspend fun onStart() {
+        observeCacheSearches()
+        fetchWeatherForDefaultLocation()
+    }
+
+    override fun sendEvent(event: WeatherUIEvent) {
+        super.sendEvent(event)  // Updates state via reducer first
+
+        // Then trigger async operations based on event
+        when (event) {
+            is WeatherUIEvent.Search -> {
+                if (event.query.isNotBlank() && event.query.length >= 2) {
+                    performSearch(event.query, shouldSave = true)
                 }
+            }
+
+            is WeatherUIEvent.OnSelectedItems -> {
+                performSearch(event.query, shouldSave = false) // Already in cache
+            }
+
+            WeatherUIEvent.OnClear -> {
+                performSearch(DEFAULT_QUERY, shouldSave = true)
+            }
+
+            WeatherUIEvent.OnRetry -> {
+                performSearch(currentState.query, shouldSave = false)
+            }
+
+            is WeatherUIEvent.OnDeleteCacheSearch -> {
+                deleteCacheItemFromDb(event.cacheSearchUiModel)
+            }
+
+            is WeatherUIEvent.OnQueryChange -> {
+                // No side effect - just state update
+            }
+        }
+    }
+
+    /**
+     * Observes cache searches from database
+     */
+    private fun observeCacheSearches() {
+        getCacheSearchUseCase()
+            .onEach { cacheSearches ->
+                setState {
+                    copy(cacheSearch = cacheSearches.toCacheSearchUiModelList())
+                }
+            }
+            .catch { e ->
+                setEffect { WeatherUIEffect.ShowError("Failed to load search history: ${e.message}") }
             }
             .launchIn(viewModelScope)
     }
 
-    fun getWeather(query: Map<String, String>) {
-        viewModelScope.launch(Dispatchers.IO + CoroutineExceptionHandler { _, exception ->
-            setState {
-                copy(
-                    uIState = UIState.Error(exception.message)
-                )
-            }
-        }) {
-            // Launch both API calls concurrently
-            val weatherDeferred = async { getWeatherUseCase(query = query) }
-            val forecastDeferred = async { getForecastUseCase(query = query) }
-
-            // Await both results
-            val weatherResponse = weatherDeferred.await()
-            val forecastResponse = forecastDeferred.await()
-
-            // Handle weather response
-            when (weatherResponse) {
-                is Result.Error -> {
-                    setState {
-                        copy(
-                            uIState = UIState.Error(weatherResponse.error)
-                        )
-                    }
-                    return@launch
-                }
-                is Result.Success<Weather> -> {
-                    // continue to check forecast
-                }
-            }
-
-            when (forecastResponse) {
-                is Result.Error -> {
-                    setState {
-                        copy(
-                            uIState = UIState.Error(forecastResponse.error)
-                        )
-                    }
-                    return@launch
-                }
-                is Result.Success<Forecast> -> {
-                    // Forecast successful, continue
-                }
-            }
-            setState {
-                copy(
-                    query = weatherResponse.data.name,
-                    uIState = UIState.Success,
-                    weatherUiModel = weatherResponse.data.toWeatherUiModel(),
-                    forecastUiModel = forecastResponse.data.toForecastUiModel()
-                )
-            }
+    /**
+     * Fetches weather for user's current location
+     */
+    private fun fetchWeatherForDefaultLocation() {
+        locationRepository.fetchLocation { location ->
+            performSearchByCoordinates(location.lat, location.lon)
         }
     }
 
-    private suspend fun executeWeatherSearch(query: String, shouldSave: Boolean = false) {
-        setState {
-            copy(
-                query = query
-            )
-        }
-        getWeather(mapOf("q" to query))
-        if (shouldSave) saveSearchQuery(query)
-    }
+    /**
+     * Fetches weather data by location coordinates
+     */
+    private fun performSearchByCoordinates(lat: Double, lon: Double) {
+        viewModelScope.launch {
+            try {
+                setState {
+                    copy(isSearching = true, uIState = UIState.Loading)
+                }
 
-    override suspend fun onStart() {
-        getCacheSearch()
-    }
+                val weatherDeferred = async {
+                    getWeatherUseCase(
+                        mapOf(
+                            "lat" to lat.toString(),
+                            "lon" to lon.toString()
+                        )
+                    )
+                }
+                val forecastDeferred = async {
+                    getForecastUseCase(
+                        mapOf(
+                            "lat" to lat.toString(),
+                            "lon" to lon.toString()
+                        )
+                    )
+                }
 
-    override suspend fun handleEvent (event: WeatherUIEvent) {
-        when (event) {
-            WeatherUIEvent.OnClear ->
-                executeWeatherSearch(DEFAULT_QUERY)
+                val weatherResult = weatherDeferred.await()
+                val forecastResult = forecastDeferred.await()
 
-            is WeatherUIEvent.OnSelectedItems ->
-                executeWeatherSearch(event.query, shouldSave = true)
-
-            is WeatherUIEvent.Search -> {
-                if (event.query.isNotEmpty())
-                    executeWeatherSearch(event.query, shouldSave = true)
-                else
-                    executeWeatherSearch(DEFAULT_QUERY, shouldSave = true)
-            }
-
-            is WeatherUIEvent.OnQueryChange -> {
+                handleWeatherResults(weatherResult, forecastResult)
+            } catch (e: Exception) {
                 setState {
                     copy(
-                        query = event.query
+                        isSearching = false,
+                        uIState = UIState.Error(e.message)
+                    )
+                }
+                setEffect {
+                    WeatherUIEffect.ShowError(e.message ?: "Failed to fetch weather")
+                }
+            }
+        }
+    }
+
+    /**
+     * Performs weather search by query
+     */
+    private fun performSearch(query: String, shouldSave: Boolean) {
+        viewModelScope.launch {
+            try {
+                // Parallel API calls
+                val weatherDeferred = async {
+                    getWeatherUseCase(mapOf("q" to query))
+                }
+                val forecastDeferred = async {
+                    getForecastUseCase(mapOf("q" to query))
+                }
+
+                val weatherResult = weatherDeferred.await()
+                val forecastResult = forecastDeferred.await()
+
+                handleWeatherResults(weatherResult, forecastResult)
+
+                // Save successful search to cache
+                if (weatherResult is Result.Success && shouldSave) {
+                    saveSearchQuery(query)
+                }
+            } catch (e: Exception) {
+                setState {
+                    copy(
+                        isSearching = false,
+                        uIState = UIState.Error(e.message)
+                    )
+                }
+                setEffect {
+                    WeatherUIEffect.ShowError(e.message ?: "Failed to fetch weather")
+                }
+            }
+        }
+    }
+
+    /**
+     * Handles weather and forecast results
+     */
+    private fun handleWeatherResults(
+        weatherResult: Result<Weather>,
+        forecastResult: Result<Forecast>
+    ) {
+        when {
+            weatherResult is Result.Success<Weather> && forecastResult is Result.Success<Forecast> -> {
+                setState {
+                    copy(
+                        isSearching = false,
+                        query = weatherResult.data.name,
+                        weatherUiModel = weatherResult.data.toWeatherUiModel(),
+                        forecastUiModel = forecastResult.data.toForecastUiModel(),
+                        uIState = UIState.Success
                     )
                 }
             }
 
-            is WeatherUIEvent.OnDeleteCacheSearch -> {
-                deleteCacheSearchQuery(event.cacheSearchUiModel)
-            }
+            else -> {
+                val error = (weatherResult as? Result.Error)?.error
+                    ?: (forecastResult as? Result.Error)?.error
 
-            WeatherUIEvent.OnRetry -> {
                 setState {
                     copy(
-                        query = DEFAULT_QUERY
+                        isSearching = false,
+                        uIState = UIState.Error(error)
                     )
                 }
-                getWeather(mapOf("q" to DEFAULT_QUERY))
+                setEffect {
+                    WeatherUIEffect.ShowError(
+                        error ?: "Failed to fetch weather data"
+                    )
+                }
             }
         }
     }
 
-    suspend fun deleteCacheSearchQuery(cacheSearchUiModel: CacheSearchUiModel) {
-        deleteCacheSearchUseCase(
-            CacheSearch(
-                id = cacheSearchUiModel.id,
-                query = cacheSearchUiModel.query
-            )
-        )
+    /**
+     * Saves search query to cache
+     */
+    private suspend fun saveSearchQuery(query: String) {
+        try {
+            insertCacheSearchUseCase(CacheSearch(id = 0, query = query))
+        } catch (e: Exception) {
+            // Silently fail - not critical for user experience
+        }
     }
 
-    suspend fun saveSearchQuery(query: String) {
-        insertCacheSearchUseCase(
-            CacheSearch(
-                id = 0,
-                query = query
-            )
-        )
+    /**
+     * Deletes cache item from database
+     */
+    private fun deleteCacheItemFromDb(cacheSearchUiModel: CacheSearchUiModel) {
+        viewModelScope.launch {
+            try {
+                deleteCacheSearchUseCase(
+                    CacheSearch(
+                        id = cacheSearchUiModel.id,
+                        query = cacheSearchUiModel.query
+                    )
+                )
+            } catch (e: Exception) {
+                // Revert optimistic update on failure
+                setState {
+                    copy(cacheSearch = cacheSearch + cacheSearchUiModel)
+                }
+                setEffect {
+                    WeatherUIEffect.ShowError("Failed to delete search: ${e.message}")
+                }
+            }
+        }
     }
 
+    /**
+     * PUBLIC API (Optional - for special cases)
+     *
+     * Fetches weather data based on current device location
+     */
+    fun fetchWeatherForCurrentLocation() {
+        fetchWeatherForDefaultLocation()
+    }
 }

@@ -19,13 +19,51 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WeatherScreen(
+    modifier: Modifier = Modifier
+) {
+    val weatherViewModel: WeatherViewModel = koinViewModel()
+    val weatherUIState by weatherViewModel.state.collectAsStateWithLifecycle()
+    // Collect one-time effects
+    LaunchedEffect(Unit) {
+        weatherViewModel.effects.collect { effect ->
+            when (effect) {
+                is WeatherUIEffect.ShowError -> {
+//                    snackbarHostState.showSnackbar(
+//                        message = effect.error,
+//                        duration = SnackbarDuration.Long
+//                    )
+                }
+
+                is WeatherUIEffect.ShowToast -> {
+//                    snackbarHostState.showSnackbar(
+//                        message = effect.message,
+//                        duration = SnackbarDuration.Short
+//                    )
+                }
+            }
+        }
+    }
+    WeatherComponent(
+        modifier = modifier,
+        weatherUIState = weatherUIState,
+        processWeatherUIEvent = weatherViewModel::sendEvent,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun WeatherComponent(
     weatherUIState: WeatherUIState,
     processWeatherUIEvent: (WeatherUIEvent) -> Unit,
     modifier: Modifier = Modifier
@@ -38,7 +76,7 @@ fun WeatherScreen(
                         WeatherUIEvent.OnRetry
                     )
                 },
-                errorMessages = state.error!!,
+                errorMessages = state.error ?: stringResource(R.string.general_error_message),
                 errorButton = stringResource(R.string.re_try)
             )
         }
@@ -58,8 +96,7 @@ fun WeatherScreen(
                 SearchEngine(
                     query = weatherUIState.query,
                     itemsList = weatherUIState.cacheSearch,
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     onQueryChange = { query ->
                         processWeatherUIEvent(
                             WeatherUIEvent.OnQueryChange(query)
@@ -80,16 +117,12 @@ fun WeatherScreen(
                     shape = RoundedCornerShape(8.dp),
                     itemContent = { t, onClick ->
                         ContactItem(
-                            contact = t,
-                            onClick = onClick,
-                            onDelete = {
+                            contact = t, onClick = onClick, onDelete = {
                                 processWeatherUIEvent(
                                     WeatherUIEvent.OnDeleteCacheSearch(it)
                                 )
-                            }
-                        )
-                    }
-                )
+                            })
+                    })
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()

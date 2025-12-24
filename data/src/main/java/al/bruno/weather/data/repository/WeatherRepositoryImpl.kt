@@ -8,9 +8,10 @@ import al.bruno.weather.data.network.WeatherNetworkDataSource
 import al.bruno.weather.data.repository.mapper.toForecast
 import al.bruno.weather.data.repository.mapper.toWeather
 import io.ktor.client.plugins.ResponseException
-import javax.inject.Inject
+import org.koin.core.annotation.Single
 
-class WeatherRepositoryImpl @Inject constructor(private val weatherNetworkDataSource: WeatherNetworkDataSource) :
+@Single
+class WeatherRepositoryImpl(private val weatherNetworkDataSource: WeatherNetworkDataSource) :
     WeatherRepository {
     override suspend fun weather(query: Map<String, String>): Result<Weather> {
         return try {
