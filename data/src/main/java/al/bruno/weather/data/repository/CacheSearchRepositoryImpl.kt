@@ -8,9 +8,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.koin.core.annotation.Single
 
-@Single
-class CacheSearchRepositoryImpl(private val cacheSearchLocalDataSource: CacheSearchLocalDataSource) :
-    CacheSearchRepository {
+@Single(createdAtStart = false, binds = [CacheSearchRepository::class])
+class CacheSearchRepositoryImpl(
+    private val cacheSearchLocalDataSource: CacheSearchLocalDataSource
+) : CacheSearchRepository {
     override suspend fun insertCacheSearch(cacheSearch: CacheSearch): Long {
         return cacheSearchLocalDataSource
             .insertCacheSearch(

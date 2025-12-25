@@ -47,7 +47,7 @@ android {
 dependencies {
     // Koin
     implementation(platform(libs.io.koin.bom))
-    implementation(libs.io.koin.compose)
+    implementation(libs.io.koin.android)
     // Koin annotations
     implementation(libs.io.koin.annotations)
     ksp(libs.io.koin.ksp.compiler)

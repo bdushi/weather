@@ -14,13 +14,9 @@ import org.koin.core.annotation.Single
 @Module
 @ComponentScan
 class DataSourceModule {
+    @Single(createdAtStart = false)
+    fun provideWeatherNetworkDataSource(httpClient: HttpClient): WeatherNetworkDataSource = WeatherDataSource(httpClient)
 
     @Single(createdAtStart = false)
-    fun provideWeatherNetworkDataSource(httpClient: HttpClient): WeatherNetworkDataSource =
-        WeatherDataSource(httpClient)
-
-
-    @Single(createdAtStart = false)
-    fun provideSearchDataSource(appDatabase: AppDatabase): CacheSearchLocalDataSource =
-        CacheSearchDataSource(appDatabase)
+    fun provideSearchDataSource(appDatabase: AppDatabase): CacheSearchLocalDataSource = CacheSearchDataSource(appDatabase)
 }

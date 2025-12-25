@@ -14,5 +14,4 @@ class CoreModule {
     @Single(createdAtStart = false)
     fun getFusedLocationProviderClient(context: Context): FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(context)
-
 }

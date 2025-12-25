@@ -8,9 +8,10 @@ import androidx.annotation.RequiresPermission
 import com.google.android.gms.location.FusedLocationProviderClient
 import org.koin.core.annotation.Single
 
-@Single
-class LocationRepositoryImpl(private val locationProvider: FusedLocationProviderClient) :
-    LocationRepository {
+@Single(createdAtStart = false, binds = [LocationRepository::class])
+class LocationRepositoryImpl(
+    private val locationProvider: FusedLocationProviderClient
+) : LocationRepository {
     override var isMyLocationEnabled: Boolean = false
 
     //        get() = TODO("Not yet implemented")

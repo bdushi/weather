@@ -49,6 +49,7 @@ dependencies {
     // Koin
     implementation(platform(libs.io.koin.bom))
     implementation(libs.io.koin.compose)
+    implementation(libs.io.koin.android)
     // Koin annotations
     implementation(libs.io.koin.annotations)
     ksp(libs.io.koin.ksp.compiler)
@@ -65,6 +66,7 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":presentation:ui"))
     implementation(project(":presentation:model"))
+    implementation(project(":core:viewmodel"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

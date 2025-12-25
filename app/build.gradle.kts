@@ -47,6 +47,10 @@ android {
     }
 }
 
+kotzilla {
+    composeInstrumentation = true
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime)
@@ -59,10 +63,11 @@ dependencies {
     implementation(libs.androidx.material3)
 
     implementation(libs.io.coil.compose)
-
+    implementation(libs.io.kotzilla.sdk)
     // Koin
     implementation(platform(libs.io.koin.bom))
     implementation(libs.io.koin.compose)
+    implementation(libs.io.koin.android)
     // Koin annotations
     implementation(libs.io.koin.annotations)
     ksp(libs.io.koin.ksp.compiler)
@@ -71,6 +76,7 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":presentation:weather"))
     implementation(project(":presentation:ui"))
+    implementation(project(":core:di"))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

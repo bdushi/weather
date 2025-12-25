@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.com.google.devtools.ksp)
 }
 
 android {
@@ -40,6 +41,12 @@ android {
 }
 
 dependencies {
+    // koin
+    implementation(platform(libs.io.koin.bom))
+    implementation(libs.io.koin.android)
+    // Koin annotations
+    implementation(libs.io.koin.annotations)
+    ksp(libs.io.koin.ksp.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

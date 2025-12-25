@@ -1,9 +1,8 @@
 package al.bruno.weather
 
 import al.bruno.presentation.ui.R
-import al.bruno.presentation.ui.theme.WeatherTheme
-import al.bruno.presentation.weather.WeatherScreen
-import al.bruno.presentation.weather.WeatherUIEffect
+import al.bruno.weather.presentation.ui.theme.WeatherTheme
+import al.bruno.weather.presentation.weather.WeatherScreen
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -17,7 +16,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import androidx.core.net.toUri

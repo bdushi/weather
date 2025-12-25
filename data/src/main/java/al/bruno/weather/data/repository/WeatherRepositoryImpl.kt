@@ -10,9 +10,10 @@ import al.bruno.weather.data.repository.mapper.toWeather
 import io.ktor.client.plugins.ResponseException
 import org.koin.core.annotation.Single
 
-@Single
-class WeatherRepositoryImpl(private val weatherNetworkDataSource: WeatherNetworkDataSource) :
-    WeatherRepository {
+@Single(createdAtStart = false, binds = [WeatherRepository::class])
+class WeatherRepositoryImpl(
+    private val weatherNetworkDataSource: WeatherNetworkDataSource
+) : WeatherRepository {
     override suspend fun weather(query: Map<String, String>): Result<Weather> {
         return try {
             Result.Success(
