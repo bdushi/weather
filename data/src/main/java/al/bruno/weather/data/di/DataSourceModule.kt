@@ -2,19 +2,21 @@ package al.bruno.weather.data.di
 
 import al.bruno.weather.data.CacheSearchDataSource
 import al.bruno.weather.data.WeatherDataSource
+import al.bruno.weather.data.local.AppDatabase
 import al.bruno.weather.data.local.CacheSearchLocalDataSource
 import al.bruno.weather.data.network.WeatherNetworkDataSource
-import dagger.Binds
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
+import io.ktor.client.HttpClient
+import org.koin.core.annotation.ComponentScan
+import org.koin.core.annotation.Module
+import org.koin.core.annotation.Single
+
 
 @Module
-@InstallIn(ViewModelComponent::class)
-abstract class DataSourceModule {
-    @Binds
-    abstract fun provideWeatherNetworkDataSource(weatherDataSource: WeatherDataSource): WeatherNetworkDataSource
+@ComponentScan
+class DataSourceModule {
+    @Single(createdAtStart = false)
+    fun provideWeatherNetworkDataSource(httpClient: HttpClient): WeatherNetworkDataSource = WeatherDataSource(httpClient)
 
-    @Binds
-    abstract fun provideSearchDataSource(searchDataSource: CacheSearchDataSource): CacheSearchLocalDataSource
+    @Single(createdAtStart = false)
+    fun provideSearchDataSource(appDatabase: AppDatabase): CacheSearchLocalDataSource = CacheSearchDataSource(appDatabase)
 }

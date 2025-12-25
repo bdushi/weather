@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.android.hilt)
+    alias(libs.plugins.io.kotzilla)
     alias(libs.plugins.com.google.devtools.ksp)
 }
 
@@ -47,6 +47,10 @@ android {
     }
 }
 
+kotzilla {
+    composeInstrumentation = true
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime)
@@ -58,15 +62,21 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
-    implementation(libs.coil.compose)
-
-    implementation(libs.dagger.hilt.android)
-    ksp(libs.dagger.hilt.android.compiler)
+    implementation(libs.io.coil.compose)
+    implementation(libs.io.kotzilla.sdk)
+    // Koin
+    implementation(platform(libs.io.koin.bom))
+    implementation(libs.io.koin.compose)
+    implementation(libs.io.koin.android)
+    // Koin annotations
+    implementation(libs.io.koin.annotations)
+    ksp(libs.io.koin.ksp.compiler)
 
     implementation(project(":data"))
     implementation(project(":domain"))
     implementation(project(":presentation:weather"))
     implementation(project(":presentation:ui"))
+    implementation(project(":core:di"))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

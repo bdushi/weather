@@ -3,19 +3,15 @@ package al.bruno.weather.data.di
 import android.content.Context
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import org.koin.core.annotation.ComponentScan
+import org.koin.core.annotation.Module
+import org.koin.core.annotation.Single
+
 
 @Module
-@InstallIn(SingletonComponent::class)
+@ComponentScan
 class CoreModule {
-    @Singleton
-    @Provides
-    fun getFusedLocationProviderClient(@ApplicationContext context: Context): FusedLocationProviderClient =
+    @Single(createdAtStart = false)
+    fun getFusedLocationProviderClient(context: Context): FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(context)
-
 }

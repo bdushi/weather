@@ -21,8 +21,11 @@ dependencyResolutionManagement {
 
 rootProject.name = "weather"
 include(":app")
-include(":domain")
-include(":presentation:weather")
 include(":data")
+include(":domain")
 include(":presentation:ui")
-include(":presentation:ui-model")
+include(":presentation:model")
+include(":presentation:weather")
+include(":core:di")
+include(":core:viewmodel")
+include(":core:location")

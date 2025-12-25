@@ -2,11 +2,10 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.com.google.gms.google.services)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.com.google.devtools.ksp)
-    alias(libs.plugins.android.hilt)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.com.google.gms.google.services)
     alias(libs.plugins.google.secrets)
 }
 
@@ -46,31 +45,34 @@ android {
 }
 
 dependencies {
-    implementation(libs.dagger.hilt.android)
-    ksp(libs.dagger.hilt.android.compiler)
-
-    // room
+    // Koin
+    implementation(platform(libs.io.koin.bom))
+    implementation(libs.io.koin.android)
+    // Koin annotations
+    implementation(libs.io.koin.annotations)
+    ksp(libs.io.koin.ksp.compiler)
+    // Room
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
 
-    implementation(libs.ktor.client.core)
-    implementation(libs.ktor.client.cio)
-    implementation(libs.ktor.client.auth)
-    implementation(libs.ktor.client.content.negotiation)
-    implementation(libs.ktor.client.logging)
-    implementation(libs.ktor.client.serialization)
+    implementation(libs.io.ktor.client.core)
+    implementation(libs.io.ktor.client.cio)
+    implementation(libs.io.ktor.client.auth)
+    implementation(libs.io.ktor.client.content.negotiation)
+    implementation(libs.io.ktor.client.logging)
+    implementation(libs.io.ktor.client.serialization)
 
-    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.org.jetbrains.kotlinx.serialization.json)
 
     implementation(libs.com.google.play.services.location)
 
     implementation(project(":domain"))
 
     testImplementation(libs.io.mockk)
-    testImplementation(libs.kotlinx.serialization.json)
-    testImplementation(libs.ktor.client.mock)
-    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.org.jetbrains.kotlinx.serialization.json)
+    testImplementation(libs.org.jetbrains.kotlinx.coroutines.test)
+    testImplementation(libs.io.ktor.client.mock)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

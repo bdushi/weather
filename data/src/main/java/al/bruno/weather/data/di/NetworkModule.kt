@@ -1,10 +1,6 @@
 package al.bruno.weather.data.di
 
 import al.bruno.weather.data.serialization.LocalDateTimeSerialization
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.engine.cio.endpoint
@@ -15,18 +11,18 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.http.URLProtocol
-import io.ktor.http.encodedPath
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
+import org.koin.core.annotation.ComponentScan
+import org.koin.core.annotation.Module
+import org.koin.core.annotation.Single
 import java.time.LocalDateTime
-import javax.inject.Singleton
 
-@InstallIn(SingletonComponent::class)
 @Module
+@ComponentScan
 class NetworkModule {
-    @Singleton
-    @Provides
+    @Single(createdAtStart = false)
     fun networkModule(): HttpClient =
         HttpClient(CIO) {
             expectSuccess = true

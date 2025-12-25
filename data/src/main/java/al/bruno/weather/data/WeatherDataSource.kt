@@ -9,9 +9,8 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import javax.inject.Inject
 
-class WeatherDataSource @Inject constructor(private val httpClient: HttpClient) : WeatherNetworkDataSource {
+class WeatherDataSource(private val httpClient: HttpClient) : WeatherNetworkDataSource {
     override suspend fun weather(query: Map<String, String>): WeatherResponse {
         return httpClient.get("/data/2.5/weather") {
             query.forEach { (key, value) ->

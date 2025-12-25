@@ -1,0 +1,11 @@
+{
+  "sdkVersion": "1.4.1",
+  "keys": [
+    {
+      "appId": "019b56a8-fcc9-7dbe-af9d-af1f7b237081",
+      "applicationPackageName": "al.bruno.weather",
+      "keyId": "019b56a9-3b30-765c-b23d-365f26a9d67f",
+      "apiKey": "ktz-sdk-x0F_yjpPb7xQ4W7kXEfb5FwLOC5o57ILn2aFq4J6uTk"
+    }
+  ]
+}

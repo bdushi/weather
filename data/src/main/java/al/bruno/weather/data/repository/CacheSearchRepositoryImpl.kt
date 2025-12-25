@@ -6,10 +6,12 @@ import al.bruno.weather.data.local.CacheSearchLocalDataSource
 import al.bruno.weather.data.local.model.CacheSearchEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
+import org.koin.core.annotation.Single
 
-class CacheSearchRepositoryImpl @Inject constructor(private val cacheSearchLocalDataSource: CacheSearchLocalDataSource) :
-    CacheSearchRepository {
+@Single(createdAtStart = false, binds = [CacheSearchRepository::class])
+class CacheSearchRepositoryImpl(
+    private val cacheSearchLocalDataSource: CacheSearchLocalDataSource
+) : CacheSearchRepository {
     override suspend fun insertCacheSearch(cacheSearch: CacheSearch): Long {
         return cacheSearchLocalDataSource
             .insertCacheSearch(
