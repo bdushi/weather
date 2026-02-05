@@ -1,0 +1,75 @@
+plugins {
+    alias libs.plugins.android.library
+    alias libs.plugins.kotlin.android
+    alias libs.plugins.kotlin.kapt
+    alias libs.plugins.kotlin.serialization
+}
+
+apply from: "$rootDir/config.gradle"
+apply from: "$rootDir/flavorConfig.gradle"
+
+android {
+    namespace 'obg.android.feature.analytics.impl'
+
+    compileSdk libs.versions.build.compile.sdk.get().toInteger()
+
+    defaultConfig {
+        minSdkVersion libs.versions.build.min.sdk.get()
+        targetSdkVersion libs.versions.build.target.sdk.get()
+
+        consumerProguardFiles 'consumer-rules.pro'
+    }
+
+    buildTypes {
+        dev {
+
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        // Flag to enable support for the new language APIs
+        coreLibraryDesugaringEnabled true
+        sourceCompatibility libs.versions.java.get()
+        targetCompatibility libs.versions.java.get()
+    }
+    kotlinOptions {
+        jvmTarget = libs.versions.java.get()
+    }
+    buildFeatures {
+        buildConfig true
+    }
+}
+
+dependencies {
+    coreLibraryDesugaring libs.desugar.jdk.libs
+
+    implementation project(':platform:analytics:public')
+    implementation project(':shared:common')
+
+    implementation libs.kotlin.stdlib
+    implementation libs.core.ktx
+
+    implementation libs.appsflyer
+    implementation libs.timber
+
+    //Google Play
+    implementation libs.play.services.ads.identifier
+
+    //Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation libs.firebase.perf.ktx
+    implementation libs.firebase.messaging
+    implementation libs.firebase.analytics
+
+    testImplementation libs.junit
+    testImplementation libs.kotest.assertions.core
+    testImplementation libs.mockk
+
+    //dagger hilt
+    implementation libs.hilt.android
+    kapt libs.hilt.compiler
+}
