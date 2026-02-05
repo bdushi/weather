@@ -4,6 +4,7 @@ import al.bruno.domain.weather.model.CacheSearch
 import al.bruno.domain.weather.model.Forecast
 import al.bruno.domain.weather.model.Result
 import al.bruno.domain.weather.model.Weather
+import al.bruno.domain.weather.repository.LocationRepository
 import al.bruno.domain.weather.usecase.DeleteCacheSearchUseCase
 import al.bruno.domain.weather.usecase.GetCacheSearchUseCase
 import al.bruno.domain.weather.usecase.GetForecastUseCase
@@ -31,7 +32,7 @@ class WeatherViewModel(
     private val getCacheSearchUseCase: GetCacheSearchUseCase,
     private val insertCacheSearchUseCase: InsertCacheSearchUseCase,
     private val deleteCacheSearchUseCase: DeleteCacheSearchUseCase,
-//    private val locationRepository: LocationRepository
+    private val locationRepository: LocationRepository
 ) : BaseViewModel<WeatherUIState, WeatherUIEvent, WeatherUIEffect>(
     initialState = WeatherUIState()
 ) {
@@ -174,10 +175,9 @@ class WeatherViewModel(
      * Fetches weather for user's current location
      */
     private fun fetchWeatherForDefaultLocation() {
-//        locationRepository.fetchLocation { location ->
-//            performSearchByCoordinates(location.lat, location.lon)
-//        }
-        performSearchByCoordinates(42.4046, 19.7681)
+        locationRepository.fetchLocation { location ->
+            performSearchByCoordinates(location.lat, location.lon)
+        }
     }
 
     /**
