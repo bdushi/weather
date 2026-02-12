@@ -1,4 +1,4 @@
-package al.bruno.weather.analytics
+package al.bruno.weather.core.analytics
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

@@ -8,11 +8,13 @@ import al.bruno.domain.weather.usecase.GetForecastUseCase
 import al.bruno.domain.weather.usecase.GetWeatherUseCase
 import al.bruno.domain.weather.usecase.InsertCacheSearchUseCase
 import org.koin.core.annotation.ComponentScan
+import org.koin.core.annotation.Configuration
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
 
 @Module
 @ComponentScan("al.bruno.weather")
+@Configuration
 class UseCaseModule {
     @Single(createdAtStart = false)
     fun getWeatherUseCaseModule(weatherRepository: WeatherRepository) =

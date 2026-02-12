@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.com.google.devtools.ksp)
+    alias(libs.plugins.koin.compiler)
 }
 
 android {
@@ -35,7 +35,6 @@ android {
     kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_21)
-            freeCompilerArgs.add("-Xexplicit-backing-fields")
         }
     }
     buildFeatures {
@@ -49,10 +48,9 @@ dependencies {
     // Koin
     implementation(platform(libs.io.koin.bom))
     implementation(libs.io.koin.compose)
-    implementation(libs.io.koin.android)
     // Koin annotations
+    implementation(libs.io.koin.core)
     implementation(libs.io.koin.annotations)
-    ksp(libs.io.koin.ksp.compiler)
 
     implementation(libs.io.coil.compose)
     implementation(libs.io.coil.network)

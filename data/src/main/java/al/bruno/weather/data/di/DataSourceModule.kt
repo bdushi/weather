@@ -7,12 +7,14 @@ import al.bruno.weather.data.local.CacheSearchLocalDataSource
 import al.bruno.weather.data.network.WeatherNetworkDataSource
 import io.ktor.client.HttpClient
 import org.koin.core.annotation.ComponentScan
+import org.koin.core.annotation.Configuration
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
 
 
 @Module
 @ComponentScan
+@Configuration
 class DataSourceModule {
     @Single(createdAtStart = false)
     fun provideWeatherNetworkDataSource(httpClient: HttpClient): WeatherNetworkDataSource = WeatherDataSource(httpClient)

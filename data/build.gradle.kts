@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.com.google.gms.google.services)
     alias(libs.plugins.google.secrets)
+    alias(libs.plugins.koin.compiler)
 }
 
 android {
@@ -44,12 +45,10 @@ android {
 }
 
 dependencies {
-    // Koin
+    // Koin & Annotations
     implementation(platform(libs.io.koin.bom))
-    implementation(libs.io.koin.android)
-    // Koin annotations
+    implementation(libs.io.koin.core)
     implementation(libs.io.koin.annotations)
-    ksp(libs.io.koin.ksp.compiler)
     // Room
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.runtime)

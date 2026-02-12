@@ -8,4 +8,5 @@ plugins {
     alias(libs.plugins.com.google.devtools.ksp) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.google.secrets) apply false
+    alias(libs.plugins.koin.compiler) apply false
 }

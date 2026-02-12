@@ -3,12 +3,14 @@ package al.bruno.walks.di
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import org.koin.core.annotation.ComponentScan
+import org.koin.core.annotation.Configuration
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Named
 import org.koin.core.annotation.Single
 
 @Module
 @ComponentScan
+@Configuration
 class DispatchersModule {
     @Single(createdAtStart = false)
     @Named("Main")

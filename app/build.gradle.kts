@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.io.kotzilla)
     alias(libs.plugins.com.google.devtools.ksp)
+    alias(libs.plugins.koin.compiler)
 }
 
 android {
@@ -49,6 +50,11 @@ android {
 kotzilla {
     composeInstrumentation = true
 }
+koinCompiler {
+    userLogs = true
+    debugLogs = false
+    dslSafetyChecks = true
+}
 
 dependencies {
     implementation(libs.androidx.core.ktx)
@@ -63,13 +69,11 @@ dependencies {
 
     implementation(libs.io.coil.compose)
     implementation(libs.io.kotzilla.sdk)
-    // Koin
+    // Koin & Annotations
     implementation(platform(libs.io.koin.bom))
     implementation(libs.io.koin.compose)
-    implementation(libs.io.koin.android)
-    // Koin annotations
+    implementation(libs.io.koin.core)
     implementation(libs.io.koin.annotations)
-    ksp(libs.io.koin.ksp.compiler)
 
     implementation(project(":data"))
     implementation(project(":domain"))

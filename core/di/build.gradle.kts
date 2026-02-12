@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.com.google.devtools.ksp)
+    alias(libs.plugins.koin.compiler)
 }
 
 android {
@@ -13,9 +13,8 @@ android {
 
     defaultConfig {
         minSdk = 26
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
+
     }
 
     buildTypes {
@@ -40,12 +39,12 @@ android {
 }
 
 dependencies {
+    implementation(libs.org.jetbrains.kotlinx.coroutines.core)
     // koin
     implementation(platform(libs.io.koin.bom))
-    implementation(libs.io.koin.android)
+    implementation(libs.io.koin.core)
     // Koin annotations
     implementation(libs.io.koin.annotations)
-    ksp(libs.io.koin.ksp.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
