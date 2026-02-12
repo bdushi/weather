@@ -1,4 +1,4 @@
-package al.bruno.walks.di
+package al.bruno.weather.core.di
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
