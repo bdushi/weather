@@ -9,7 +9,9 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import org.koin.core.annotation.Single
 
+@Single(createdAtStart = false, binds = [WeatherNetworkDataSource::class])
 class WeatherDataSource(private val httpClient: HttpClient) : WeatherNetworkDataSource {
     override suspend fun weather(query: Map<String, String>): WeatherResponse {
         return httpClient.get("/data/2.5/weather") {

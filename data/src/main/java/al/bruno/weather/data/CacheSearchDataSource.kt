@@ -1,29 +1,27 @@
 package al.bruno.weather.data
 
-import al.bruno.weather.data.local.AppDatabase
 import al.bruno.weather.data.local.CacheSearchLocalDataSource
+import al.bruno.weather.data.local.dao.SearchDao
 import al.bruno.weather.data.local.model.CacheSearchEntity
 import kotlinx.coroutines.flow.Flow
 
-class CacheSearchDataSource(private val appDatabase: AppDatabase) :
+class CacheSearchDataSource(private val searchDao: SearchDao) :
     CacheSearchLocalDataSource {
     override suspend fun insertCacheSearch(cacheSearchEntity: CacheSearchEntity): Long {
-        return appDatabase
-            .searchDao()
+        return searchDao
             .insertCacheSearch(
                 cacheSearchEntity
             )
     }
 
     override suspend fun deleteCacheSearch(cacheSearchEntity: CacheSearchEntity): Int {
-        return appDatabase
-            .searchDao()
+        return searchDao
             .deleteCacheSearch(
                 cacheSearchEntity
             )
     }
 
     override fun getCacheSearch(): Flow<List<CacheSearchEntity>> {
-        return appDatabase.searchDao().getCacheSearch()
+        return searchDao.getCacheSearch()
     }
 }
