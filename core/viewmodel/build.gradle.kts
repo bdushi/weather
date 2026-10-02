@@ -6,9 +6,8 @@ plugins {
 
 android {
     namespace = "al.bruno.weather.core.viewmodel"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 37
+    compileSdkMinor = 1
 
     defaultConfig {
         minSdk = 26

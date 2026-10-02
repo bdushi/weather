@@ -1,13 +1,13 @@
 package al.bruno.weather.presentation.weather
 
 import WeatherComponent
+import al.bruno.presentation.ui.R
+import al.bruno.weather.presentation.model.UIState
 import al.bruno.weather.presentation.ui.ContactItem
 import al.bruno.weather.presentation.ui.ErrorContentComponent
 import al.bruno.weather.presentation.ui.ForecastComponent
 import al.bruno.weather.presentation.ui.LoadingContentComponent
-import al.bruno.presentation.ui.R
 import al.bruno.weather.presentation.ui.SearchEngine
-import al.bruno.weather.presentation.model.UIState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues

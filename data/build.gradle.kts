@@ -11,7 +11,8 @@ plugins {
 
 android {
     namespace = "al.bruno.weather.data"
-    compileSdk = 36
+    compileSdk = 37
+    compileSdkMinor = 1
 
     defaultConfig {
         minSdk = 26

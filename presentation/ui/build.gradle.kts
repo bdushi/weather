@@ -7,7 +7,8 @@ plugins {
 
 android {
     namespace = "al.bruno.presentation.ui"
-    compileSdk = 36
+    compileSdk = 37
+    compileSdkMinor = 1
 
     defaultConfig {
         minSdk = 26

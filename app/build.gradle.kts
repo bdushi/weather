@@ -10,12 +10,13 @@ plugins {
 
 android {
     namespace = "al.bruno.weather"
-    compileSdk = 36
+    compileSdk = 37
+    compileSdkMinor = 1
 
     defaultConfig {
         applicationId = "al.bruno.weather"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -53,7 +54,6 @@ kotzilla {
 koinCompiler {
     userLogs = true
     debugLogs = false
-    dslSafetyChecks = true
 }
 
 dependencies {
