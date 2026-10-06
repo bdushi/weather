@@ -37,7 +37,7 @@ Use a **pure reducer with commands**, following the Elm Architecture, implemente
 
 "Pure" applies to the reducer. The executor is impure by design. A **hybrid** is any code path that changes state without going through the reducer, and that is what we forbid.
 
-The full reference implementation is in [04-elm-commands.md](../mvi-patterns/04-elm-commands.md). Ideas borrowed from other libraries are in [borrowed-ideas.md](../mvi-patterns/borrowed-ideas.md).
+Implemented in commit `449a4b2` (branch `feature/mvi-pure-reducer`). The code is reproduced in [04-elm-commands.md](../mvi-patterns/04-elm-commands.md). Ideas borrowed from other libraries are in [borrowed-ideas.md](../mvi-patterns/borrowed-ideas.md).
 
 ### Naming
 

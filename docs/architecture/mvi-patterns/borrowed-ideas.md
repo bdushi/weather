@@ -5,7 +5,7 @@ What we take from each library into our own base ([04](04-elm-commands.md)). The
 | # | Idea | From | Where it lands |
 |---|---|---|---|
 | 1 | Cancel the previous job of the same kind | adidas `UniqueIntent`, TCA `cancelInFlight`, NgRx `switchMap`, FlowRedux `CancelPrevious`, Ballast `sideJob(key)` | `MviViewModel.launchUnique(key)` |
-| 2 | Effects held as state until handled, processed only while STARTED | Google "UI events" guidance, adidas `SideEffects`, TCA `@Presents`, Orbit `collectSideEffect(STARTED)` | Pending queue in `MviViewModel` + `HandleEffects` composable |
+| 2 | Effects held as state until handled, processed only while STARTED | Google "UI events" guidance, adidas `SideEffects`, TCA `@Presents`, Orbit `collectSideEffect(STARTED)` | Pending queue in `MviViewModel` + `HandleEffects` composable (`presentation/ui`) |
 | 3 | A host interface the UI depends on | Orbit `OrbitContainerHost`, adidas `MviHost` | `MviHost<S, Ev, Eff>` |
 | 4 | One place that logs every transition | adidas logger, Ballast debugger | `onTransition(event, old, next)` → `core/logging`, `core/analytics` |
 | 5 | A failing reducer doesn't corrupt state | adidas | `onReducerError`: keep the old state; rethrow in debug |
@@ -40,7 +40,7 @@ final override fun sendEvent(event: Ev) {
     val old = _state.value
     val next = try {
         reducer.reduce(old, event).also { first ->
-            if (debugChecks) check(reducer.reduce(old, event) == first) { "Reducer is not pure for $event" }   // 6
+            if (debugChecks) check(reducer.reduce(old, event) == first) { "Reducer is not pure: two runs differ for $event" }   // 6
         }
     } catch (e: Exception) {
         onReducerError(event, old, e)                                                                     // 5
@@ -49,11 +49,11 @@ final override fun sendEvent(event: Ev) {
     _state.value = next.state
     onTransition(event, old, next)                                                                        // 4
     if (next.effects.isNotEmpty()) _effects.update { q -> q + next.effects.map { Pending(nextEffectId++, it) } }
-    next.commands.forEach { execute(it) }
+    next.commands.forEach(::execute)
 }
 ```
 
-`debugChecks` is passed in by the app module (e.g. `BuildConfig.DEBUG`), because `core/viewmodel` doesn't see the app's `BuildConfig`. Calling `reduce` twice is cheap, because reducers do no I/O.
+`debugChecks` is passed in by the feature module as its own `BuildConfig.DEBUG` (`presentation/weather` enables `buildFeatures.buildConfig` for this), because `core/viewmodel` doesn't see the app's `BuildConfig`. When the check fails, it throws inside the `try`, so it goes through `onReducerError` like any other reducer bug. Calling `reduce` twice is cheap, because reducers do no I/O.
 
 ## 8. Derived values
 

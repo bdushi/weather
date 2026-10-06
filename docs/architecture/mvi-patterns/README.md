@@ -2,7 +2,7 @@
 
 Every approach we looked at before choosing ours, written against the **same weather scenario** so you can compare them directly. The decision itself is in [ADR 0001](../adr/0001-pure-reducer-mvi.md). The rules for everyday work are in [`MVI.md`](../../../MVI.md).
 
-> Library facts (versions, API names, dates) were checked against each project's source, releases and docs on **2026-10-06**. Code sketches haven't been compiled. They show the shape of each approach, not copy-paste code.
+> Library facts (versions, API names, dates) were checked against each project's source, releases and docs on **2026-10-06**. Code sketches haven't been compiled. They show the shape of each approach, not copy-paste code. The exception is [04](04-elm-commands.md), which is copied from the real implementation.
 
 ## The scenario
 
