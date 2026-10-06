@@ -37,8 +37,7 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.core.ktx)
+    // Logging types (Logging, LogLevel) are part of this module's public API
+    api(project(":core:logging"))
     testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 }

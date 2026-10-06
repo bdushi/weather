@@ -1,5 +1,7 @@
 package al.bruno.weather
 
+import al.bruno.weather.core.analytics.Analytics
+import al.bruno.weather.core.analytics.logEvent
 import android.app.Application
 import coil3.ImageLoader
 import coil3.PlatformContext
@@ -8,6 +10,7 @@ import coil3.request.CachePolicy
 import coil3.request.crossfade
 import coil3.util.DebugLogger
 import io.kotzilla.sdk.analytics.koin.analytics
+import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.annotation.KoinApplication
@@ -30,6 +33,13 @@ class WeatherApp : Application(), SingletonImageLoader.Factory {
             androidLogger()
             androidContext(this@WeatherApp)
             analytics()
+        }
+        get<Analytics>().apply {
+            initialize()
+            logEvent("app_open") {
+                require("app_version")
+                require("build_type")
+            }
         }
     }
 }
