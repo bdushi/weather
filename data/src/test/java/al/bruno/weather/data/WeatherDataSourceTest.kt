@@ -61,14 +61,14 @@ class WeatherDataSourceTest {
 
     @Test
     fun `weather returns parsed WeatherResponse`() = runTest {
-        val result = dataSource.weather("piqeras")
+        val result = dataSource.weather(mapOf("q" to "piqeras"))
         assertEquals("Piqeras", result.name)
         assertEquals("Clear", result.weather.first().main)
     }
 
     @Test
     fun `forecast returns parsed ForecastResponse`() = runTest {
-        val result = dataSource.forecast("piqeras")
+        val result = dataSource.forecast(mapOf("q" to "piqeras"))
         assertEquals("Piqeras", result.city.name)
         assertEquals("Clear", result.list.first().weather.first().main)
     }

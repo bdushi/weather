@@ -35,9 +35,9 @@ class WeatherRepositoryTest {
 
     @Test
     fun `weather returns Result Success`() = runTest {
-        coEvery { mockDataSource.weather("piqeras") } returns weatherResponse
+        coEvery { mockDataSource.weather(mapOf("q" to "piqeras")) } returns weatherResponse
 
-        val result = repository.weather("piqeras")
+        val result = repository.weather(mapOf("q" to "piqeras"))
 
         assertTrue(result is Result.Success)
         assertEquals("Piqeras", (result as Result.Success).data.name)
@@ -45,9 +45,9 @@ class WeatherRepositoryTest {
 
     @Test
     fun `weather returns Result Error on exception`() = runTest {
-        coEvery { mockDataSource.weather("piqeras") } throws RuntimeException("Network error")
+        coEvery { mockDataSource.weather(mapOf("q" to "piqeras")) } throws RuntimeException("Network error")
 
-        val result = repository.weather("piqeras")
+        val result = repository.weather(mapOf("q" to "piqeras"))
 
         assertTrue(result is Result.Error)
         assertEquals("Network error", (result as Result.Error).error)
