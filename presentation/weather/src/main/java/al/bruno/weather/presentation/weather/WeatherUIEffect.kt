@@ -1,8 +1,8 @@
 package al.bruno.weather.presentation.weather
 
-import al.bruno.weather.core.viewmodel.UiEffect
+import al.bruno.weather.core.viewmodel.UIEffect
 
-sealed class WeatherUIEffect : UiEffect {
-    data class ShowToast(val message: String) : WeatherUIEffect()
-    data class ShowError(val error: String) : WeatherUIEffect()
+sealed interface WeatherUIEffect : UIEffect {
+    data class ShowToast(val message: String) : WeatherUIEffect
+    data class ShowError(val message: String) : WeatherUIEffect
 }

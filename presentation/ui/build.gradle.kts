@@ -54,7 +54,9 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(project(":presentation:model"))
+    implementation(project(":core:viewmodel"))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

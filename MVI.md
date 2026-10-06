@@ -1,326 +1,102 @@
-# MVI Architecture Guide (Android + Jetpack Compose)
+# MVI in this project
 
-> A practical, opinionated guide to implementing **Model–View–Intent (MVI)** on Android using **Jetpack Compose**, **StateFlow**, and **ViewModel**.
->
-> This README summarizes multiple valid MVI approaches, explains **why they exist**, highlights **common pitfalls**, and clearly **recommends the best approach** based on real-world usage.
+How we build screens. **Why** we do it this way: [ADR 0001](docs/architecture/adr/0001-pure-reducer-mvi.md). **What else we considered** (13 pages, the same weather example in each): [MVI pattern catalog](docs/architecture/mvi-patterns/README.md).
 
----
-
-## Table of Contents
-
-1. [What is MVI?](#what-is-mvi)
-2. [Core Building Blocks](#core-building-blocks)
-3. [Unidirectional Data Flow](#unidirectional-data-flow)
-4. [Events vs Effects (Critical Distinction)](#events-vs-effects-critical-distinction)
-5. [Reducer Role Explained](#reducer-role-explained)
-6. [Three Valid MVI Approaches](#three-valid-mvi-approaches)
-7. [Recommended Approach ⭐](#recommended-approach-)
-8. [Base Architecture](#base-architecture)
-9. [UI Integration (Compose)](#ui-integration-compose)
-10. [Common Pitfalls](#common-pitfalls)
-11. [Best Practices](#best-practices)
-12. [Decision Cheat Sheet](#decision-cheat-sheet)
-
----
-
-## What is MVI?
-
-**MVI (Model–View–Intent)** is a reactive UI architecture that enforces:
-
-- **Single source of truth** (State)
-- **Explicit user actions** (Events / Intents)
-- **Unidirectional data flow**
-- **Predictable and testable state changes**
-
-MVI is especially powerful with **Jetpack Compose**, where UI is a pure function of state.
-
----
-
-## Core Building Blocks
-
-### 1. State (ViewModel → UI)
-
-Persistent UI data.
-
-```kotlin
-data class WeatherUIState(
-    val query: String = "",
-    val isLoading: Boolean = false,
-    val weather: WeatherUiModel? = null,
-    val error: String? = null
-) : UiState
-```
-
----
-
-### 2. Event (UI → ViewModel)
-
-Represents **user actions**.
-
-```kotlin
-sealed class WeatherUIEvent : UiEvent {
-    data class Search(val query: String) : WeatherUIEvent()
-    data class QueryChanged(val query: String) : WeatherUIEvent()
-    data object Retry : WeatherUIEvent()
-}
-```
-
----
-
-### 3. Effect (ViewModel → UI)
-
-One-time UI reactions (NOT state).
-
-```kotlin
-sealed class WeatherUIEffect : UiEffect {
-    data class ShowToast(val message: String) : WeatherUIEffect()
-    data class ShowValidationError(val field: String) : WeatherUIEffect()
-    data object NavigateBack : WeatherUIEffect()
-}
-```
-
----
-
-## Unidirectional Data Flow
+## The loop
 
 ```
-User Action
-    ↓
-UI sends Event
-    ↓
-ViewModel / Reducer
-    ↓
-State updated
-    ↓
-UI recomposes
+(State, Event) -> Next(State, Effects, Commands)
 ```
 
-Effects are emitted **out-of-band** and consumed once by the UI.
-
----
-
-## Events vs Effects (Critical Distinction)
-
-### Rule of Thumb
-
-| Question | Use |
-|--------|-----|
-| Triggered directly by user? | **Event** |
-| One-time UI reaction? | **Effect** |
-| Persistent UI data? | **State** |
-
-### ❌ Wrong
-
-```kotlin
-sealed class UIEffect {
-    data class PerformSearch(val query: String) : UIEffect()
-}
+```
+UI ──Event──▶ REDUCER (pure) ──State──▶ UI
+                 │       └──Effects──▶ UI (snackbar, navigation)
+                 └─Commands─▶ EXECUTOR (ViewModel: use cases, DB)
+                                   └──result Event──▶ REDUCER
 ```
 
-### ✅ Correct
+| Type | Direction | Example | Who sees it |
+|---|---|---|---|
+| `UIState` | Reducer → UI | `loadState = Loading` | UI (`StateFlow`) |
+| `UIEvent` | UI or executor → reducer | `Search("Paris")`, `WeatherLoaded(...)` | Reducer |
+| `UIEffect` | Reducer → UI, one-shot | `ShowError("too short")` | UI (queued until handled) |
+| `Command` | Reducer → executor | `FetchWeather(id, City("Paris"))` | Executor only |
 
-```kotlin
-sealed class UIEvent {
-    data class Search(val query: String) : UIEvent()
-}
-```
+## Rules
 
----
+1. **The reducer is the only place state changes.** It's pure and synchronous: no `suspend`, no use cases, no `viewModelScope`, no clock or randomness.
+   > "Reducers Must Not Have Side Effects." (Redux Style Guide)
+2. **The reducer decides; the executor does.** The executor turns commands into use-case calls and results into events. It never makes a business decision and never reads `state.value` to make one. Anything it needs goes in the command.
+3. **Async results are events** (`XLoaded`, `XFailed`, `XChanged`). They go back through `sendEvent`. This includes callbacks such as a location fix (`LocationResolved`). The executor never chains one piece of work into the next by itself; the reducer decides the next command.
+4. **There is no `setState` and no `setEffect`.** A code path that changes state without going through the reducer is a *hybrid*, and that's not allowed.
+5. **What the reducer must remember between asking and answering goes into state** (`requestId` for stale results, `pendingSave` for "do X if it succeeds").
+6. **Effects are UI-only. Commands are internal.** Never collect effects to trigger logic. Effects wait in a queue until the UI handles them with `HandleEffects`, which calls `effectHandled(id)` *after* the work is done (after the snackbar finishes, or after navigating). We don't use a `Channel`.
+7. **Start a screen from `init { sendEvent(Started) }`**, not from `onStart` with `WhileSubscribed`.
+8. **`sendEvent` runs on the main thread.** Events are processed one at a time, in order.
+9. **Every reducer has a plain JUnit test that asserts the whole `Next`.**
+10. **Derived values are extension properties on the state**, not stored fields.
 
-## Reducer Role Explained
+## Naming
 
-A **Reducer** is a **pure function**:
+| Kind | Pattern | Examples |
+|---|---|---|
+| UI intent | `OnX` / verb | `OnRetry`, `OnQueryChange`, `Search` |
+| Result | `XLoaded` / `XFailed` / `XChanged` / `XResolved` | `WeatherLoaded`, `DeleteFailed`, `HistoryChanged`, `LocationResolved` |
+| Command | `FetchX` / `ResolveX` / `SaveX` / `DeleteX` / `ObserveX` | `FetchWeather`, `ResolveLocation`, `SaveQuery`, `ObserveHistory` |
+| Effect | `ShowX` / `NavigateX` | `ShowError` |
+| Load status | `LoadState.Loading / Success / Error` | (renamed from the old sealed `UIState`) |
 
-```kotlin
-State + Event → New State (+ optional Effect)
-```
-
-It must:
-
-- Be synchronous
-- Have no side effects
-- Be deterministic
-
----
-
-## Three Valid MVI Approaches
-
-### Approach 1 — State-Only Reducer
-
-```kotlin
-fun reduce(state: State, event: Event): State
-```
-
-**Pros**
-- Very simple
-- Easy to learn
-
-**Cons**
-- Effects handled outside reducer
-- Less declarative
-
-**Best for:** small apps, beginners
-
----
-
-### Approach 2 — Pair<State, Effect?> ⭐
-
-```kotlin
-fun reduce(state: State, event: Event): Pair<State, Effect?>
-```
-
-Reducer declares **state changes** and **UI effects**.
-Async work happens elsewhere.
-
-**Pros**
-- Declarative
-- Highly testable
-- Clear intent
-
-**Cons**
-- Slightly more complex
-
----
-
-### Approach 3 — Effect-Driven Logic ❌
-
-```kotlin
-init {
-    effects.collect { effect ->
-        // trigger business logic
-    }
-}
-```
-
-**Never use this.**
-
-Creates circular dependencies:
+## Files per screen
 
 ```
-Event → Effect → Event → Effect → ...
+presentation/<feature>/
+  <Feature>UIState.kt      data class : UIState         (+ bookkeeping fields)
+  <Feature>UIEvent.kt      sealed interface : UIEvent   (intents, then results)
+  <Feature>UIEffect.kt     sealed interface : UIEffect
+  <Feature>Command.kt      sealed interface              (+ value types such as WeatherTarget)
+  <Feature>Reducer.kt      object : Reducer<…>          ← the screen's behavior
+  <Feature>ViewModel.kt    MviViewModel<…>, implements execute()
+  <Feature>Screen.kt       Route (MviHost) + stateless Screen
+test/
+  <Feature>ReducerTest.kt
 ```
 
----
+A simple screen whose reducer returns no commands needs no `Command` file and an empty `execute`.
 
-## Recommended Approach ⭐
+## Base API (`core/viewmodel`)
 
-### ✅ **Approach 2: Reducer returns `Pair<State, Effect?>`**
+| Member | Purpose |
+|---|---|
+| `sendEvent(event)` | The only entry point. Reduce, log, emit effects, run commands |
+| `execute(command)` | Abstract: run the work, report back with `sendEvent` |
+| `launchUnique(key) { }` | Starting new work under a key cancels the old work (switch-latest) |
+| `onTransition(event, old, next)` | Hook for logging and analytics |
+| `onReducerError(event, state, e)` | Rethrows by default; release builds may log and keep the old state |
+| `effects` / `effectHandled(id)` | Pending UI effects as `StateFlow<List<Pending<Eff>>>`, and removing one once it's handled |
+| `HandleEffects(host) { }` | Composable in `presentation/ui`: handles queued effects one at a time while STARTED, then confirms each one |
+| `debugChecks` (constructor) | Pass `BuildConfig.DEBUG` (enable `buildFeatures.buildConfig` in the feature module): reduces every event twice and fails if the results differ |
+| `MviHost<S, Ev, Eff>` | What the UI depends on, so previews and tests can pass a fake |
 
-Why?
+Full code, copied from the implementation: [04-elm-commands.md](docs/architecture/mvi-patterns/04-elm-commands.md). The source of truth is `core/viewmodel/MviViewModel.kt` and `MviContract.kt`.
 
-- Reducer remains pure
-- UI effects are declarative
-- Async work stays explicit
-- Excellent testability
-- Clean separation of concerns
-
----
-
-## Base Architecture
-
-```kotlin
-interface Reducer<State : UiState, Event : UiEvent, Effect : UiEffect> {
-    fun reduce(state: State, event: Event): Pair<State, Effect?>
-}
-```
-
-```kotlin
-abstract class BaseReducerViewModel<State : UiState, Event : UiEvent, Effect : UiEffect>(
-    initialState: State
-) : ViewModel() {
-
-    private val _state = MutableStateFlow(initialState)
-    val state: StateFlow<State> = _state
-
-    private val _effects = Channel<Effect>(Channel.BUFFERED)
-    val effects = _effects.receiveAsFlow()
-
-    protected val currentState get() = _state.value
-
-    protected abstract val reducer: Reducer<State, Event, Effect>
-
-    open fun sendEvent(event: Event) {
-        val (newState, effect) = reducer.reduce(currentState, event)
-        _state.value = newState
-        effect?.let { viewModelScope.launch { _effects.send(it) } }
-    }
-
-    protected fun setState(block: State.() -> State) {
-        _state.value = currentState.block()
-    }
-}
-```
-
-Async work is triggered **after** `sendEvent()`.
-
----
-
-## UI Integration (Compose)
-
-```kotlin
-@Composable
-fun Screen(viewModel: MyViewModel) {
-    val state by viewModel.state.collectAsState()
-
-    LaunchedEffect(Unit) {
-        viewModel.effects.collect { effect ->
-            when (effect) {
-                is MyEffect.ShowToast -> { /* show snackbar */ }
-            }
-        }
-    }
-
-    // Render UI from state
-}
-```
-
----
-
-## Common Pitfalls
-
-### ❌ Effects as Events
-### ❌ Async work in reducer
-### ❌ Collecting effects to trigger logic
-### ❌ UI holding its own state
-### ❌ Multiple StateFlows
-
----
-
-## Best Practices
-
-- Reducer = pure + synchronous
-- Events = user actions only
-- Effects = UI reactions only
-- State = single source of truth
-- Async work in ViewModel, not reducer
-- Exhaustive `when` on sealed classes
-
----
-
-## Decision Cheat Sheet
+## Checklist
 
 ```
-User clicked something?      → Event
-Need API / DB call?          → ViewModel async
-Need to update UI forever?  → State
-Need toast / navigation?    → Effect
-Need validation?            → Reducer
+Is it something the user did?               → Intent event (OnX)
+Is it the result of async work?             → Result event (XLoaded / XFailed)
+Does it need an API / DB / location call?   → Reducer returns a Command; executor runs it
+Is it data the UI renders?                  → State
+Is it a one-shot UI reaction (snackbar)?    → Effect
+Is it a rule ("valid?", "save if…")?        → Reducer
+Can it be computed from state?              → Extension property, not a field
 ```
 
----
+## Pitfalls
 
-## Final Recommendation
-
-🏆 **Use Approach 2 (`Pair<State, Effect?>`)**
-
-It provides the best balance of:
-
-- Clarity
-- Testability
-- Explicit intent
-- Scalability
-
----
-
-Happy coding 🚀
-
+- ❌ `setState` from a coroutine, which is the hybrid.
+- ❌ A second `when (event)` outside the reducer.
+- ❌ `catch (e: Exception)` without rethrowing `CancellationException`.
+- ❌ An executor that checks business rules.
+- ❌ The UI sending result events.
+- ❌ Asserting only some fields of `Next` in reducer tests.
+- ❌ Calling `effectHandled` before the effect's work has finished, or collecting effects with a bare `LaunchedEffect(Unit)`.
