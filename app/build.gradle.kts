@@ -76,6 +76,7 @@ dependencies {
     implementation(project(":presentation:weather"))
     implementation(project(":presentation:ui"))
     implementation(project(":core:di"))
+    implementation(project(":analytics"))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

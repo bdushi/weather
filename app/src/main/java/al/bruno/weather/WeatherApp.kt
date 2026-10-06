@@ -2,6 +2,9 @@ package al.bruno.weather
 
 import al.bruno.walks.di.DispatchersModule
 import al.bruno.weather.core.di.CoroutineScopesModule
+import al.bruno.weather.analytics.Analytics
+import al.bruno.weather.analytics.logEvent
+import al.bruno.weather.di.AnalyticsModule
 import al.bruno.weather.di.UseCaseModule
 import al.bruno.weather.data.di.CoreModule
 import al.bruno.weather.data.di.DataSourceModule
@@ -15,6 +18,7 @@ import coil3.request.CachePolicy
 import coil3.request.crossfade
 import coil3.util.DebugLogger
 import io.kotzilla.sdk.analytics.koin.analytics
+import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -44,7 +48,15 @@ class WeatherApp : Application(), SingletonImageLoader.Factory {
                 NetworkModule().module,
                 CoroutineScopesModule().module,
                 DispatchersModule().module,
+                AnalyticsModule().module,
             )
+        }
+        get<Analytics>().apply {
+            initialize()
+            logEvent("app_open") {
+                require("app_version")
+                require("build_type")
+            }
         }
     }
 }
