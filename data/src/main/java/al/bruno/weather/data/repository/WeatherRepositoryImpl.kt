@@ -8,6 +8,7 @@ import al.bruno.weather.data.network.WeatherNetworkDataSource
 import al.bruno.weather.data.repository.mapper.toForecast
 import al.bruno.weather.data.repository.mapper.toWeather
 import io.ktor.client.plugins.ResponseException
+import kotlinx.coroutines.CancellationException
 import org.koin.core.annotation.Single
 
 @Single(createdAtStart = false, binds = [WeatherRepository::class])
@@ -23,6 +24,11 @@ class WeatherRepositoryImpl(
             )
         } catch (ex: ResponseException) {
             Result.Error(ex.response.status.description)
+        } catch (ex: CancellationException) {
+            throw ex
+        } catch (ex: Exception) {
+            // No network, timeout, malformed JSON: still a Result, never a crash
+            Result.Error(ex.message)
         }
     }
 
@@ -35,6 +41,11 @@ class WeatherRepositoryImpl(
             )
         } catch (ex: ResponseException) {
             Result.Error(ex.response.status.description)
+        } catch (ex: CancellationException) {
+            throw ex
+        } catch (ex: Exception) {
+            // No network, timeout, malformed JSON: still a Result, never a crash
+            Result.Error(ex.message)
         }
     }
 }
