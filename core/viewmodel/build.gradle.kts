@@ -39,8 +39,11 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.lifecycle.viewmodel)
+    // Exposed in the public API (ViewModel superclass, StateFlow properties)
+    api(libs.androidx.lifecycle.viewmodel)
+    api(libs.org.jetbrains.kotlinx.coroutines.core)
     testImplementation(libs.junit)
+    testImplementation(libs.org.jetbrains.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }

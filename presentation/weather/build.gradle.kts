@@ -39,12 +39,14 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true   // BuildConfig.DEBUG enables the reducer purity check
     }
 }
 
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     // Koin
     implementation(platform(libs.io.koin.bom))
     implementation(libs.io.koin.compose)
@@ -67,6 +69,7 @@ dependencies {
     implementation(project(":presentation:model"))
     implementation(project(":core:viewmodel"))
     testImplementation(libs.junit)
+    testImplementation(libs.io.mockk)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
